@@ -1,0 +1,12 @@
+test_images,test_labels=next(train_gen)
+plt.figure(figsize=(20,15))
+for i in range(10):
+    plt.subplot(2,5,i+1)
+    plt.imshow(test_images[i])
+    plt.xticks([])
+    plt.yticks([])
+    real = classes_dict[test_labels[i]]
+    img = test_images[i].reshape(1,224,224,3)
+    predicted = int(np.argmax(model.predict(img),axis=1))
+    predicted = classes_dict[predicted]
+    plt.xlabel(f"Real: {real}\n Predicted: {predicted}")

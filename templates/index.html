@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Fruit Freshness Detector</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <div class="container">
+        <h1>Fruit Freshness Detection</h1>
+
+        <div class="drop-area" id="drop-area">
+            <p>Drag & Drop a Fruit Image Here</p>
+            <p>or click to select</p>
+            <input type="file" id="fileElem" accept="image/*" onchange="handleFiles(this.files)">
+        </div>
+
+        <img id="preview" src="#" alt="Image Preview" style="display:none; max-width:200px; margin-top:15px;">
+
+        <div id="resultSection" style="display:none;">
+            <h2>Prediction Result</h2>
+            <p><strong>Class:</strong> <span id="resultLabel"></span></p>
+            <p><strong>Confidence:</strong> <span id="resultConfidence"></span>%</p>
+        </div>
+    </div>
+
+    <script>
+        const dropArea = document.getElementById('drop-area');
+        const fileInput = document.getElementById('fileElem');
+        const preview = document.getElementById('preview');
+
+        dropArea.addEventListener('click', () => fileInput.click());
+
+        ['dragenter', 'dragover'].forEach(event => {
+            dropArea.addEventListener(event, e => {
+                e.preventDefault();
+                e.stopPropagation();
+                dropArea.classList.add('highlight');
+            });
+        });
+
+        ['dragleave', 'drop'].forEach(event => {
+            dropArea.addEventListener(event, e => {
+                e.preventDefault();
+                e.stopPropagation();
+                dropArea.classList.remove('highlight');
+            });
+        });
+
+        dropArea.addEventListener('drop', e => {
+            const files = e.dataTransfer.files;
+            if (files.length) {
+                handleFiles(files);
+            }
+        });
+
+        function handleFiles(files) {
+            const file = files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                preview.src = e.target.result;
+                preview.style.display = 'block';
+            };
+            reader.readAsDataURL(file);
+
+            const formData = new FormData();
+            formData.append('file', file);
+
+            fetch('/predict', {
+                method: 'POST',
+                body: formData
+            })
+            .then(res => res.json())
+            .then(data => {
+                if (data.error) {
+                    alert(data.error);
+                    return;
+                }
+                document.getElementById('resultLabel').textContent = data.predicted_label;
+                document.getElementById('resultConfidence').textContent = (data.confidence * 100).toFixed(2);
+                document.getElementById('resultSection').style.display = 'block';
+            })
+            .catch(err => {
+                alert("Error: " + err);
+            });
+        }
+    </script>
+</body>
+</html>
