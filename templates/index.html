@@ -16,7 +16,8 @@
             <input type="file" id="fileElem" accept="image/*" onchange="handleFiles(this.files)">
         </div>
 
-        <img id="preview" src="#" alt="Image Preview" style="display:none; max-width:200px; margin-top:15px;">
+        <img id="preview" src="#" alt="Image Preview"
+             style="display:none; max-width:200px; margin-top:15px;">
 
         <div id="resultSection" style="display:none;">
             <h2>Prediction Result</h2>
@@ -59,15 +60,17 @@
             const file = files[0];
             if (!file) return;
 
+            // Preview image
             const reader = new FileReader();
-            reader.onload = function(e) {
+            reader.onload = function (e) {
                 preview.src = e.target.result;
                 preview.style.display = 'block';
             };
             reader.readAsDataURL(file);
 
+            // Send image to backend
             const formData = new FormData();
-            formData.append('file', file);
+            formData.append('image', file); // ✅ FIXED (was 'file')
 
             fetch('/predict', {
                 method: 'POST',
@@ -79,12 +82,17 @@
                     alert(data.error);
                     return;
                 }
-                document.getElementById('resultLabel').textContent = data.predicted_label;
-                document.getElementById('resultConfidence').textContent = (data.confidence * 100).toFixed(2);
+
+                document.getElementById('resultLabel').textContent =
+                    data.predicted_label;
+                document.getElementById('resultConfidence').textContent =
+                    (data.confidence * 100).toFixed(2);
+
                 document.getElementById('resultSection').style.display = 'block';
             })
             .catch(err => {
                 alert("Error: " + err);
+                console.error(err);
             });
         }
     </script>
